@@ -16,8 +16,18 @@ const client_1 = require("@prisma/client");
 const express_1 = __importDefault(require("express"));
 const pinata_1 = require("pinata");
 const ethers_1 = require("ethers");
+const dotenv_1 = __importDefault(require("dotenv"));
+const cors_1 = __importDefault(require("cors"));
+dotenv_1.default.config();
 const prisma = new client_1.PrismaClient();
 const app = (0, express_1.default)();
+// Configure CORS with more specific options
+app.use((0, cors_1.default)({
+    origin: '*', // Allow all origins - for development only
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
 // Middleware
 app.use(express_1.default.json());
 // Routes
@@ -89,7 +99,6 @@ app.get('/get-file', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         // Parse buffer to JSON and send as JSON response
         const jsonData = JSON.parse(Buffer.from(fileData).toString());
         res.json(jsonData);
-        console.log(jsonData);
     }
     catch (error) {
         console.error('Error retrieving file:', error);
