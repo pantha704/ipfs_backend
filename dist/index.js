@@ -34,10 +34,6 @@ app.use(express_1.default.json());
 app.post('/upload-file', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { file } = req.body;
-        // // Convert base64 to buffer
-        // const fileBuffer = Buffer.from(file, 'base64')
-        // Create a File object directly from the buffer for Pinata SDK
-        // This avoids the Blob type error by skipping the Blob creation step
         const fileName = req.body.fileName || 'uploaded-file.json';
         const fileType = req.body.fileType || 'application/json';
         const fileObject = new File([JSON.stringify(file)], fileName, {
@@ -48,7 +44,6 @@ app.post('/upload-file', (req, res) => __awaiter(void 0, void 0, void 0, functio
             pinataGateway: process.env.GATEWAY_URL,
         });
         const walletAddress = yield ethers_1.ethers.Wallet.createRandom().getAddress();
-        // Use the correct method from Pinata SDK
         const result = yield pinata.upload.public.file(fileObject);
         prisma.content.create({
             data: {
@@ -80,23 +75,13 @@ app.get('/get-file', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (!fileHash) {
             return res.status(400).json({ error: 'File hash is required' });
         }
-        // Construct the gateway URL manually
         const gatewayUrl = `https://${process.env.GATEWAY_URL}/ipfs/${fileHash}`;
-        // https://bronze-wrong-aardvark-644.mypinata.cloud/ipfs/
-        // Fetch the file from the gateway
         const response = yield fetch(gatewayUrl);
         if (!response.ok) {
             throw new Error(`Failed to fetch file: ${response.statusText}`);
         }
-        // Get the raw data instead of trying to parse JSON
         const fileData = yield response.arrayBuffer();
-        // Set appropriate headers based on content type
         res.set('Content-Type', response.headers.get('Content-Type') || 'application/octet-stream');
-        // Send the raw file data
-        // For JSON data, you could parse it first if needed
-        // const jsonData = JSON.parse(Buffer.from(fileData).toString());
-        // res.json(jsonData);
-        // Parse buffer to JSON and send as JSON response
         const jsonData = JSON.parse(Buffer.from(fileData).toString());
         res.json(jsonData);
     }
